@@ -23,7 +23,7 @@ if nargin<2
 end
 
 % if nargin<2 || isempty(max_hops)
-%     max_hops=1;
+ max_hops=1;
 % end
 
 if nargin<1
