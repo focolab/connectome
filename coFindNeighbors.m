@@ -178,8 +178,8 @@ if ~exist('nobj') nobj=[]; end
                 p{m}=[txt{i,1} ' -' num2str(num(i)) verblist{verb(i)} '-> ' txt{i,2}];
                 if verboseFlag disp(p{m}); end
 
-                snobj.gapneighbor{m}=txt{i,1};
-                snobj.gapstrength(m)=num(i);
+                snobj.gapNeighbor{m}=txt{i,1};
+                snobj.gapStrength(m)=num(i);
           %  elseif strcmp(n1,txt(i,1))
           %      snobj.gapneighbor{m}=txt{i,2};
           %      snobj.gapstrength(m)=num(i);
