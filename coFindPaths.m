@@ -1,4 +1,4 @@
-function nobj=coFindPaths(neuron1,neuron2,max_hops,verboseFlag)
+function [nobj numTwoHops]=coFindPaths(neuron1,neuron2,max_hops,verboseFlag,coStruct)
 %COFINDPATHS(neuron1,neuron2,max_hops,verboseFlag)
 %
 %find all one or two hop pathways from neuron1 to neuron2
@@ -24,7 +24,7 @@ function nobj=coFindPaths(neuron1,neuron2,max_hops,verboseFlag)
 %
 
 if nargin<3 || isempty(max_hops)
-    max_hops=3;
+    max_hops=2;
 end
 
 if nargin<1
@@ -40,11 +40,6 @@ if nargin<4 || isempty(verboseFlag)
 end
 
 
-
-verblist={'syn','syp','gap'};
-%load database
-[num,txt,raw] = xlsread('NeuronConnect.xls','','','basic');
-
 if verboseFlag
     disp(' ');
     disp(['FINDING PATHS FOR ' neuron1 ' -> ' neuron2 ', max ' num2str(max_hops) ' hops.']);
@@ -52,29 +47,53 @@ if verboseFlag
     disp(' ');
 end
 
-%preprocess database
-txt(1,:)=[];  %delete header
-numrows=size(num,1);
-verb=zeros(numrows,1);
-for i=1:numrows
-    if strcmp(txt{i,3},'S')  
-        verb(i)=1;
-    elseif strcmp(txt{i,3},'Sp')
-        verb(i)=2;
-    elseif strcmp(txt{i,3} ,'EJ')
-        verb(i)=3;
-    end
-end
 
-reverb=zeros(numrows,1);
-for i=1:numrows
-    if strcmp(txt{i,3},'R')  
-        reverb(i)=1;
-    elseif strcmp(txt{i,3},'Rp')
-        reverb(i)=2;
-    elseif strcmp(txt{i,3} ,'EJ')
-        reverb(i)=3;
+verblist={'syn','syp','gap'};
+
+
+if nargin<4 || isempty(coStruct)
+    
+    
+    %load database
+    [num,txt,raw] = xlsread('NeuronConnect.xls','','','basic');
+
+
+    %preprocess database
+    txt(1,:)=[];  %delete header
+    numrows=size(num,1);
+    verb=zeros(numrows,1);
+    for i=1:numrows
+        if strcmp(txt{i,3},'S')  
+            verb(i)=1;
+        elseif strcmp(txt{i,3},'Sp')
+            verb(i)=2;
+        elseif strcmp(txt{i,3} ,'EJ')
+            verb(i)=3;
+        end
     end
+
+    reverb=zeros(numrows,1);
+    for i=1:numrows
+        if strcmp(txt{i,3},'R')  
+            reverb(i)=1;
+        elseif strcmp(txt{i,3},'Rp')
+            reverb(i)=2;
+        elseif strcmp(txt{i,3} ,'EJ')
+            reverb(i)=3;
+        end
+    end
+
+ 
+    
+else
+ 
+    verb=coStruct.verb;
+    reverb=coStruct.reverb;
+    num=coStruct.num;
+    txt=coStruct.txt;
+    
+    numrows=size(num,1);
+
 end
 
 neuron1L=[neuron1 'L'];
@@ -82,47 +101,47 @@ neuron2L=[neuron2 'L'];
 neuron1R=[neuron1 'R'];
 neuron2R=[neuron2 'R'];
 
-for i=1:numrows
-    if strcmp(txt(i,1),neuron1)
-        firstneuron={neuron1}; break;
-    else
-        firstneuron={};
+    for i=1:numrows
+        if strcmp(txt(i,1),neuron1)
+            firstneuron={neuron1}; break;
+        else
+            firstneuron={};
+        end
     end
-end
 
-for i=1:numrows
-    if strcmp(txt(i,1),neuron2)
-        secondneuron={neuron2}; break;
-    else
-        secondneuron={};
+    for i=1:numrows
+        if strcmp(txt(i,1),neuron2)
+            secondneuron={neuron2}; break;
+        else
+            secondneuron={};
+        end
     end
-end
-        
-t=0;
-for i=1:numrows
-    if strcmp(txt(i,1),neuron1L)
-        firstneuron={firstneuron{:}, neuron1L}; break
-    end
-end
 
-for i=1:numrows
-     if strcmp(txt(i,1),neuron1R)
-        firstneuron={firstneuron{:}, neuron1R}; break
+    for i=1:numrows
+        if strcmp(txt(i,1),neuron1L)
+            firstneuron={firstneuron{:}, neuron1L}; break
+        end
     end
-end   
- 
-for i=1:numrows
-     if strcmp(txt(i,1),neuron1L)
-        secondneuron={secondneuron{:}, neuron2L}; break
-    end
-end   
 
-for i=1:numrows
-     if strcmp(txt(i,1),neuron1R)
-        secondneuron={secondneuron{:}, neuron2R}; break
-    end
-end   
+    for i=1:numrows
+         if strcmp(txt(i,1),neuron1R)
+            firstneuron={firstneuron{:}, neuron1R}; break
+        end
+    end   
 
+    for i=1:numrows
+         if strcmp(txt(i,1),neuron1L)
+            secondneuron={secondneuron{:}, neuron2L}; break
+        end
+    end   
+
+    for i=1:numrows
+         if strcmp(txt(i,1),neuron1R)
+            secondneuron={secondneuron{:}, neuron2R}; break
+        end
+    end   
+    
+    
 kk=1;
 for ii=1:length(firstneuron)
     for jj=1:length(secondneuron)
@@ -182,7 +201,9 @@ if ~exist('nobj') nobj=[]; end
 
     %find 2-hop paths
 
+   
     if maxhops>1  %2 hops
+        numTwoHops=0;
         if verboseFlag
             disp(' ');
             disp('two hop paths:');
@@ -198,6 +219,7 @@ if ~exist('nobj') nobj=[]; end
                             numpp1(n)=num(i);
                             numpp2(n)=num(j);
                             if verboseFlag disp(pp{n}); end
+                            numTwoHops=numTwoHops+1;
                             n=n+1;
                         end
                     end
